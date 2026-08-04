@@ -1,8 +1,24 @@
-import requests
+import  pymupdf4llm
 
-url = "http://export.arxiv.org/api/query?search_query=all:%22large+language+models%22&start=0&max_results=1"
-response = requests.get(url, timeout=30)
+text = pymupdf4llm.to_markdown("paper.pdf")
+text = text.replace("*", "")
 
-print(f"Status Code: {response.status_code}")
-print(f"Headers: {dict(response.headers)}")
-print(f"Body Preview: {response.text[:500]}")
+
+data = {}
+heading = ""
+for lines in text.splitlines():
+    clean_text = lines.strip()
+
+    if not clean_text:
+        continue
+
+    if clean_text.startswith("## ") and not clean_text.startswith("###"):
+        data[(clean_text[3::])] = ""
+        heading = (clean_text[3::])
+    else:
+        if data:
+            data[heading] += clean_text
+
+
+
+print(data)

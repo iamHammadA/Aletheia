@@ -3,11 +3,14 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 import requests
 from bs4 import BeautifulSoup 
+import  pymupdf4llm
+import json
 
 def get_data():
+    from backend.app.extraction.extractor import headings_and_text_recognization , full_data
     command = command_gathering()
     encoded_command = urllib.parse.quote(command)
-    max_results = 1
+    max_results = 2
     url = f"http://export.arxiv.org/api/query?search_query=all:{encoded_command}&max_results={max_results}"
     
     with urllib.request.urlopen(url) as in_data:
@@ -26,7 +29,7 @@ def get_data():
 
     print(pdf_links)
     file_name = "paper.pdf"
-    for links in pdf_links:
+    for idx, links in enumerate(pdf_links):
         response = requests.get(links, stream=True)
         
         if response.status_code == 200:
@@ -34,6 +37,11 @@ def get_data():
                 for chunk in response.iter_content(chunk_size= 1024 * 1024):
                     if chunk:
                         pdf_file.write(chunk)
+        headings_and_text_recognization(idx)
+    with open("arxiv_papers_full.json", "w", encoding="utf-8") as f:
+        json.dump(full_data, f, indent=4, ensure_ascii=False )
+    return None
+    
     
 def command_gathering():
     return input("Enter the topic you want to research on: ")
